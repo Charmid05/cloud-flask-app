@@ -7,18 +7,43 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
-# Simulated storage - in a real app, this would be a database
-STORAGE_FILE = 'files.json'
+# In-memory storage for Vercel deployment
+# We'll initialize it from the file if it exists, but then use memory for operations
+files_data = []
 
+# File operations
 def load_files():
+    global files_data
+    # If we have data in memory already, return it
+    if files_data:
+        return files_data
+    
+    # Otherwise try to load from file (for local development)
+    STORAGE_FILE = 'files.json'
     if os.path.exists(STORAGE_FILE):
-        with open(STORAGE_FILE, 'r') as f:
-            return json.load(f)
+        try:
+            with open(STORAGE_FILE, 'r') as f:
+                files_data = json.load(f)
+                return files_data
+        except Exception as e:
+            print(f"Error loading file: {e}")
+    
+    # Default empty list if nothing exists
     return []
 
 def save_files(files):
-    with open(STORAGE_FILE, 'w') as f:
-        json.dump(files, f)
+    global files_data
+    # Update in-memory data
+    files_data = files
+    
+    # For local development, also try to save to disk
+    STORAGE_FILE = 'files.json'
+    try:
+        with open(STORAGE_FILE, 'w') as f:
+            json.dump(files, f)
+    except Exception as e:
+        print(f"Error saving to file (expected in Vercel): {e}")
+        # Continue anyway - this will work in memory even if file save fails
 
 @app.route('/')
 def index():
@@ -41,9 +66,14 @@ def upload_file():
         flash(f'File {filename} already exists!', 'error')
         return redirect(url_for('index'))
     
+    # Generate a new ID ensuring uniqueness
+    new_id = 1
+    if files:
+        new_id = max(file['id'] for file in files) + 1
+    
     # Add new file with metadata
     files.append({
-        'id': len(files) + 1,
+        'id': new_id,
         'name': filename,
         'size': file_size,
         'uploaded_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
