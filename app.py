@@ -8,13 +8,15 @@ app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
 # Simulated storage - in a real app, this would be a database
-STORAGE_FILE = 'files.json'
+STORAGE_FILE = '/tmp/files.json'
+
 
 def load_files():
-    if os.path.exists(STORAGE_FILE):
-        with open(STORAGE_FILE, 'r') as f:
-            return json.load(f)
-    return []
+    if not os.path.exists(STORAGE_FILE):
+        save_files([])  # Create an empty file if it doesn’t exist
+    with open(STORAGE_FILE, 'r') as f:
+        return json.load(f)
+
 
 def save_files(files):
     with open(STORAGE_FILE, 'w') as f:
