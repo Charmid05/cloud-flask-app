@@ -1,17 +1,23 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from datetime import datetime
+import os
 
+# Initialize Flask app
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
 
-# Configure SQLite database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///files.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Configure SQLite Database
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(BASE_DIR, 'database.db')}"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.secret_key = "your_secret_key"
 
+# Initialize Database
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)  # Flask-Migrate for database migrations
 
-# Define File model
+# Define File Model
 class File(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False, unique=True)
