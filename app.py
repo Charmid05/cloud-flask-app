@@ -91,20 +91,6 @@ def update_file():
         flash(f'Error updating file: {str(e)}', 'error')
         return redirect(url_for('index'))
 
-    
-    # Check if file exists
-    for file in files:
-        if file['id'] == file_id:
-            old_name = file['name']
-            file['name'] = new_name
-            file['type'] = new_name.split('.')[-1] if '.' in new_name else 'unknown'
-            save_files(files)
-            flash(f'File renamed from {old_name} to {new_name}', 'success')
-            break
-    else:
-        flash('File not found', 'error')
-    
-    return redirect(url_for('index'))
 
 @app.route('/delete/<int:file_id>', methods=['POST'])
 def delete_file(file_id):
